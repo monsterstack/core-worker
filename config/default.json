@@ -1,0 +1,6 @@
+{
+  "channel": "myChannel",
+  "redis": {
+    "host": "u6-appserver-redis.uy6nek.0001.use1.cache.amazonaws.com"
+  }
+}
