@@ -16,6 +16,19 @@ class Worker extends EventEmitter {
     this.proxyLib = require('discovery-proxy');
     this.proxy = null;
 
+    this.discoveryHost = "localhost";
+    this.discoveryPort = 7616;
+
+    if(options) {
+      if(options.discoveryHost) {
+        this.discoveryHost = options.discoveryHost;
+      }
+
+      if(options.discoveryPort) {
+        this.discoveryPort = options.discoveryPort;
+      }
+    }
+
     let queue = null;
 
     if(options) {
