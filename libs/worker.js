@@ -2,7 +2,6 @@
 const Promise = require('promise');
 const QueueWorker = require('redis-queue-worker');
 const EventEmitter = require('events').EventEmitter;
-const appRoot = require('app-root-path');
 
 
 class Worker extends EventEmitter {
@@ -11,7 +10,7 @@ class Worker extends EventEmitter {
     this.id = require('node-uuid').v1();
     this.name = name;
 
-    this.types = require(`${appRoot}/typeQuery.json`);
+    this.types = options.typeQuery || [];
     this.redis = options.redis;
 
     this.proxyLib = require('discovery-proxy');
