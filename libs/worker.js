@@ -1,16 +1,19 @@
 'use strict';
 const Promise = require('promise');
 const config = require('config');
+const appRoot = require('app-root-path');
 const QueueWorker = require('redis-queue-worker');
 const EventEmitter = require('events').EventEmitter;
 
 
 class Worker extends EventEmitter {
-  constructor(name, options) {
+  constructor(name, announcement, options) {
     super();
     this.id = require('node-uuid').v1();
     this.options = options;
     this.name = name;
+
+    this.announcement = announcement;
 
     this.types = options.typeQuery || [];
     this.redis = options.redis;
