@@ -46,6 +46,7 @@ class Worker extends EventEmitter {
   getMe() {
     let descriptor = {
       type: this.name,
+      class: "Worker",
       schemaPath: this.announcement.schemaPath,
       docsPath: this.announcement.docsPath,
       timestamp: new Date(),
