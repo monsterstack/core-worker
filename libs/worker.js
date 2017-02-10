@@ -1,5 +1,6 @@
 'use strict';
 const Promise = require('promise');
+const config = require('config');
 const QueueWorker = require('redis-queue-worker');
 const EventEmitter = require('events').EventEmitter;
 
@@ -8,6 +9,7 @@ class Worker extends EventEmitter {
   constructor(name, options) {
     super();
     this.id = require('node-uuid').v1();
+    this.options = options;
     this.name = name;
 
     this.types = options.typeQuery || [];
@@ -16,8 +18,8 @@ class Worker extends EventEmitter {
     this.proxyLib = require('discovery-proxy');
     this.proxy = null;
 
-    this.discoveryHost = "localhost";
-    this.discoveryPort = 7616;
+    this.discoveryHost = config.discovery.host;
+    this.discoveryPort = config.discovery.port;
 
     if(options) {
       if(options.discoveryHost) {
@@ -37,6 +39,27 @@ class Worker extends EventEmitter {
         this.queues = options.queue;
       }
     }
+  }
+
+  getMe() {
+    let descriptor = {
+      type: this.name,
+      schemaPath: this.announcement.schemaPath,
+      docsPath: this.announcement.docsPath,
+      timestamp: new Date(),
+      id: this.id,
+      region: this.announcement.region,
+      stage: this.announcement.stage,
+      status: 'Online',
+      version: this.announcement.version
+    };
+
+    let p = new Promise((resolve, reject) => {
+      descriptor.endpoint = `q://${this.options.queue}`;
+      resolve(descriptor);
+    });
+    return p;
+
   }
 
 
@@ -94,6 +117,29 @@ class Worker extends EventEmitter {
       p.bind({ types: self.types });
       self.proxy = p;
     });
+  }
+
+  announce(exitHandlerFactory, modelRepository) {
+    this.makeAnnouncement = true; /// Not being set in constructor for some reason @TODO: FIX
+    if(this.makeAnnouncement === true) {
+      if(exitHandlerFactory)
+        this._bindCleanUp(exitHandlerFactory, modelRepository);
+    }
+
+    if(this.makeAnnouncement === true) {
+      let self = this;
+      // Discovery Proxy -- init / announce
+      this.getMe().then((me) => {
+        console.log(me);
+        console.log(`http://${this.discoveryHost}:${this.discoveryPort}`);
+        this.proxyLib.connect({addr:`http://${this.discoveryHost}:${this.discoveryPort}`}, (err, p) => {
+          p.bind({ descriptor: me, types: self.types });
+          self.proxy = p;
+        });
+      }).catch((err) => {
+        console.log(err);
+      });
+    }
   }
 
   /**
