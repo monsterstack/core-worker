@@ -1,7 +1,6 @@
 'use strict';
 const Promise = require('promise');
 const config = require('config');
-const appRoot = require('app-root-path');
 const QueueWorker = require('redis-queue-worker');
 const EventEmitter = require('events').EventEmitter;
 
