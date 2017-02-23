@@ -2,10 +2,10 @@
 const Promise = require('promise');
 const config = require('config');
 const QueueWorker = require('redis-queue-worker');
-const EventEmitter = require('events').EventEmitter;
+const Node = require('./node').Node;
 
 
-class Worker extends EventEmitter {
+class Worker extends Node {
   constructor(name, announcement, options) {
     super();
     this.id = require('node-uuid').v1();
