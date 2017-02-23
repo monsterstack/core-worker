@@ -18,7 +18,7 @@ class Worker extends Node {
     this.redis = options.redis;
 
     if(this.redis) {
-      this.redis.retry_strategy = this.redisRetrystrategy()
+      this.redis.retry_strategy = this.redisRetrystrategy();
     }
 
     this.proxyLib = require('discovery-proxy');
