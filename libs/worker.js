@@ -1,4 +1,5 @@
 'use strict';
+const debug = require('debug')('core-worker');
 const Promise = require('promise');
 const config = require('config');
 const QueueWorker = require('redis-queue-worker');
@@ -40,7 +41,7 @@ class Worker extends Node {
     let queue = null;
 
     if(options) {
-      console.log(options);
+      debug(options);
       if(options.queue) {
         this.queues = options.queue;
       }
