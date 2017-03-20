@@ -2,14 +2,20 @@
 const debug = require('debug')('core-worker');
 const EventEmitter = require('events');
 
+/**
+ * Base Node
+ */
 class Node extends EventEmitter {
-
+    /**
+     * Create Node
+     */
     constructor() {
         super();
     }
 
     /**
      * Redis Retry strategy
+     * @returns {Function} - Retry Strategy
      */
     redisRetryStrategy() {
         return (options) => {

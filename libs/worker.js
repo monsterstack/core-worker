@@ -6,7 +6,16 @@ const QueueWorker = require('redis-queue-worker');
 const Node = require('./node').Node;
 
 
+/**
+ * Base Worker 
+ */
 class Worker extends Node {
+  /**
+   * Create Worker
+   * @param name {String}
+   * @param announcement {Object}
+   * @param options {Object}
+   */
   constructor(name, announcement, options) {
     super();
     this.id = require('node-uuid').v1();
@@ -70,7 +79,10 @@ class Worker extends Node {
 
   }
 
-
+  /**
+   * Initialize Worker
+   * @returns {Promise}
+   */
   init() {
     let self = this;
     let p = new Promise((resolve, reject) => {
@@ -86,6 +98,10 @@ class Worker extends Node {
     return p;
   }
 
+  /**
+   * Listen to Message Broker
+   * @returns {Promise}
+   */
   listen() {
     let self = this;
     let p = new Promise((resolve, reject) => {
@@ -115,6 +131,7 @@ class Worker extends Node {
    * Query for Services that will be of use.
    * @param exitHandlerFactory
    * @param modelRepository
+   * @returns {Void}
    */
   query(exitHandlerFactory, modelRepository) {
     let self = this;
@@ -127,6 +144,12 @@ class Worker extends Node {
     });
   }
 
+  /**
+   * Announce
+   * @param exitHandler {Object}
+   * @param modelRepository {Object}
+   * @returns {Void}
+   */
   announce(exitHandlerFactory, modelRepository) {
     this.makeAnnouncement = true; /// Not being set in constructor for some reason @TODO: FIX
     if(this.makeAnnouncement === true) {
@@ -153,6 +176,9 @@ class Worker extends Node {
   /**
    * Cleanup handler
    * Perform any necessary cleanup for the server on exit.
+   * @param exitHandler {Object}
+   * @param modelRepository {Object}
+   * @returns {Void}
    */
   _bindCleanUp(exitHandlerFactory, modelRepository) {
     process.stdin.resume();//so the program will not close instantly
