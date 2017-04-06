@@ -13,9 +13,12 @@
     "redis-queue-worker": "^1.2.0",
     "util": "^0.10.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "discovery-proxy": "https://github.com/monsterstack/discovery-proxy#development"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "cd tests && mocha *-test.js --reporter nyan",
+    "checkStyle": "jscs libs --reporter unix",
     "start": "node server.js"
   },
   "author": "",

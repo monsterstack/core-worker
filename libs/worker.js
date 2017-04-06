@@ -5,10 +5,6 @@ const config = require('config');
 const QueueWorker = require('redis-queue-worker');
 const Node = require('./node').Node;
 
-
-/**
- * Base Worker 
- */
 class Worker extends Node {
   /**
    * Create Worker
@@ -21,13 +17,13 @@ class Worker extends Node {
     this.id = require('node-uuid').v1();
     this.options = options;
     this.name = name;
-
+    this._worker = null;
     this.announcement = announcement;
 
     this.types = options.typeQuery || [];
     this.redis = options.redis;
 
-    if(this.redis) {
+    if (this.redis) {
       this.redis.retry_strategy = this.redisRetryStrategy();
     }
 
@@ -37,30 +33,34 @@ class Worker extends Node {
     this.discoveryHost = config.discovery.host;
     this.discoveryPort = config.discovery.port;
 
-    if(options) {
-      if(options.discoveryHost) {
+    if (options) {
+      if (options.discoveryHost) {
         this.discoveryHost = options.discoveryHost;
       }
 
-      if(options.discoveryPort) {
+      if (options.discoveryPort) {
         this.discoveryPort = options.discoveryPort;
       }
     }
 
     let queue = null;
 
-    if(options) {
+    if (options) {
       debug(options);
-      if(options.queue) {
+      if (options.queue) {
         this.queues = options.queue;
       }
     }
   }
 
+  hasWorker() {
+    return this._worker !== null;
+  }
+
   getMe() {
     let descriptor = {
       type: this.name,
-      class: "Worker",
+      class: 'Worker',
       schemaPath: this.announcement.schemaPath,
       docsPath: this.announcement.docsPath,
       timestamp: new Date(),
@@ -68,7 +68,7 @@ class Worker extends Node {
       region: this.announcement.region,
       stage: this.announcement.stage,
       status: 'Online',
-      version: this.announcement.version
+      version: this.announcement.version,
     };
 
     let p = new Promise((resolve, reject) => {
@@ -84,14 +84,14 @@ class Worker extends Node {
    * @returns {Promise}
    */
   init() {
-    let self = this;
+    let _this = this;
     let p = new Promise((resolve, reject) => {
-      console.log(`Starting ${self.name}`);
+      let initHeaderLog = `Starting ${_this.name}`;
+      debug(initHeaderLog);
 
       // Init
 
-
-      console.log('Resolve');
+      debug('Resolve');
       resolve();
 
     });
@@ -103,22 +103,23 @@ class Worker extends Node {
    * @returns {Promise}
    */
   listen() {
-    let self = this;
+    let _this = this;
     let p = new Promise((resolve, reject) => {
-      console.log(`Attempt bind on channel ${this.queues}`);
-      if(this.queues) {
-        this._worker = new QueueWorker(this.queues, {}, this.redis);
+      debug(`Attempt bind on channel ${_this.queues}`);
+      if (_this.queues) {
+        _this._worker = new QueueWorker(_this.queues, {}, _this.redis);
 
-        this._worker.on('message', (queue, data) => {
-          self.emit(data);
+        _this._worker.on('message', (queue, data) => {
+          _this.emit(data);
         });
 
-        this._worker.on('error', (err) => {
-          self.emit(err);
+        _this._worker.on('error', (err) => {
+          _this.emit(err);
         });
 
-        this._worker.start();
+        _this._worker.start();
       }
+
       resolve();
 
     });
@@ -134,13 +135,16 @@ class Worker extends Node {
    * @returns {Void}
    */
   query(exitHandlerFactory, modelRepository) {
-    let self = this;
-    if(exitHandlerFactory)
-      this._bindCleanUp(exitHandlerFactory, modelRepository);
+    let _this = this;
+    if (exitHandlerFactory) {
+      _this._bindCleanUp(exitHandlerFactory, modelRepository);
+    }
+
     // Dispatch Proxy -- init / announce
-    this.proxyLib.connect({addr:`http://${this.discoveryHost}:${this.discoveryPort}`}, (err, p) => {
-      p.bind({ types: self.types });
-      self.proxy = p;
+    let addr = `http://${this.discoveryHost}:${this.discoveryPort}`;
+    this.proxyLib.connect({ addr: addr }, (err, p) => {
+      p.bind({ types: _this.types });
+      _this.proxy = p;
     });
   }
 
@@ -152,20 +156,21 @@ class Worker extends Node {
    */
   announce(exitHandlerFactory, modelRepository) {
     this.makeAnnouncement = true; /// Not being set in constructor for some reason @TODO: FIX
-    if(this.makeAnnouncement === true) {
-      if(exitHandlerFactory)
+    if (this.makeAnnouncement === true) {
+      if (exitHandlerFactory)
         this._bindCleanUp(exitHandlerFactory, modelRepository);
     }
 
-    if(this.makeAnnouncement === true) {
-      let self = this;
+    if (this.makeAnnouncement === true) {
+      let _this = this;
+
       // Discovery Proxy -- init / announce
       this.getMe().then((me) => {
         console.log(me);
-        console.log(`http://${this.discoveryHost}:${this.discoveryPort}`);
-        this.proxyLib.connect({addr:`http://${this.discoveryHost}:${this.discoveryPort}`}, (err, p) => {
-          p.bind({ descriptor: me, types: self.types });
-          self.proxy = p;
+        let addr = `http://${this.discoveryHost}:${this.discoveryPort}`;
+        this.proxyLib.connect({ addr: addr }, (err, p) => {
+          p.bind({ descriptor: me, types: _this.types });
+          _this.proxy = p;
         });
       }).catch((err) => {
         console.log(err);
@@ -187,13 +192,13 @@ class Worker extends Node {
     let exitHandler = exitHandlerFactory(this.id, modelRepository);
 
     //do something when app is closing
-    process.on('exit', exitHandler.bind(null,{cleanup:true}));
+    process.on('exit', exitHandler.bind(null, { cleanup: true }));
 
     //catches ctrl+c event
-    process.on('SIGINT', exitHandler.bind(null, {cleanup:true}));
+    process.on('SIGINT', exitHandler.bind(null, { cleanup: true }));
 
     //catches uncaught exceptions
-    process.on('uncaughtException', exitHandler.bind(null, {cleanup:true}));
+    process.on('uncaughtException', exitHandler.bind(null, { cleanup: true }));
   }
 
 }
