@@ -166,7 +166,6 @@ class Worker extends Node {
 
       // Discovery Proxy -- init / announce
       this.getMe().then((me) => {
-        console.log(me);
         let addr = `http://${this.discoveryHost}:${this.discoveryPort}`;
         this.proxyLib.connect({ addr: addr }, (err, p) => {
           p.bind({ descriptor: me, types: _this.types });
